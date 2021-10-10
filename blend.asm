@@ -86,14 +86,11 @@ st r2, [PPU_BG2_CTRL]
 
 st r1, [PPU_FADE_CTRL] ; clear fade control
 
-ld r2, #2
-st r2, [PPU_BLEND_LEVEL] ; set blend level to 75%
+ld r2, #1
+st r2, [PPU_BLEND_LEVEL] ; set blend level to 50%
 
 ld r2, #1
 st r2, [PPU_SPRITE_CTRL] ; enable sprites
-
-; initialize stack pointer to end of RAM space
-ld sp, #0x27ff
 
 ; clear bg 1 tile map
 ld r2, #1
@@ -138,26 +135,43 @@ st r2, [PPU_BG1_SEGMENT_ADDR]
 st r2, [PPU_BG2_SEGMENT_ADDR]
 st r2, [PPU_SPRITE_SEGMENT_ADDR]
 
-; set color 0 of palette
+; set color 0 of palette 0
 ld r2, #color(29,26,15)
 st r2, [PPU_COLOR(0)]
+
+;set color 0 of other palettes
 ld r2, #0x8000
 st r2, [PPU_COLOR(16)]
+st r2, [PPU_COLOR(32)]
+st r2, [PPU_COLOR(48)]
+st r2, [PPU_COLOR(64)]
 
-; set color 1 of palette
+; set color 1 of palette 0 and 1
 ld r2, #color(31,0,0)
 st r2, [PPU_COLOR(1)]
 st r2, [PPU_COLOR(17)]
 
-; set color 2 of palette
+; set color 2 of palette 0 and 1
 ld r2, #color(0,0,31)
 st r2, [PPU_COLOR(2)]
 st r2, [PPU_COLOR(18)]
 
-; set color 3 of palette
+; set color 3 of palette 0+1
 ld r2, #color(0,0,0)
 st r2, [PPU_COLOR(3)]
 st r2, [PPU_COLOR(19)]
+
+; set color 1 of palette 2
+ld r2, #color(0,31,0)
+st r2, [PPU_COLOR(33)]
+
+; set color 1 of palette 3
+ld r2, #color(0,0,31)
+st r2, [PPU_COLOR(49)]
+
+; set color 1 of palette 4
+ld r2, #color(31,31,31)
+st r2, [PPU_COLOR(65)]
 
 ; write tile map contents
 
@@ -188,6 +202,11 @@ ld r2, #3
 st r2, [PPU_SPRITE_TILE(0)] ; right blue triangle
 ld r2, #4
 st r2, [PPU_SPRITE_TILE(1)] ; right black square
+ld r2, #2
+st r2, [PPU_SPRITE_TILE(2)]
+st r2, [PPU_SPRITE_TILE(3)]
+st r2, [PPU_SPRITE_TILE(4)]
+st r2, [PPU_SPRITE_TILE(5)]
 
 ; set tile X positions
 ; note that the coordinates of a sprite refers to its center point
@@ -196,12 +215,25 @@ st r2, [PPU_SPRITE_TILE(1)] ; right black square
 ld r2, #64
 st r2, [PPU_SPRITE_X(0)]
 st r2, [PPU_SPRITE_X(1)]
+ld r2, #-64
+st r2, [PPU_SPRITE_X(2)]
+ld r2, #-48
+st r2, [PPU_SPRITE_X(3)]
+ld r2, #-32
+st r2, [PPU_SPRITE_X(4)]
+ld r2, #-16
+st r2, [PPU_SPRITE_X(5)]
 
 ; set tile Y positions
 ld r2, #96
 st r2, [PPU_SPRITE_Y(0)]
 ld r2, #32
 st r2, [PPU_SPRITE_Y(1)]
+ld r2, #-32
+st r2, [PPU_SPRITE_Y(2)]
+st r2, [PPU_SPRITE_Y(3)]
+st r2, [PPU_SPRITE_Y(4)]
+st r2, [PPU_SPRITE_Y(5)]
 
 ; set attribute config for sprites
 ; bit 0-1: color depth (0 = 2-bit)
@@ -215,6 +247,29 @@ st r2, [PPU_SPRITE_Y(1)]
 ld r2, #0x71f0
 st r2, [PPU_SPRITE_ATTR(0)]
 st r2, [PPU_SPRITE_ATTR(1)]
+
+; bottom triangle sprite attributes
+; same as above but with different depths and palettes
+
+; bit 8-11: palette (palette 1, colors 16-19 for 2-bit)
+; bit 12-13: depth (0 = bottom layer)
+ld r2, #0x41f0
+st r2, [PPU_SPRITE_ATTR(2)]
+
+; bit 8-11: palette (palette 2, colors 32-35 for 2-bit)
+; bit 12-13: depth (1)
+ld r2, #0x52f0
+st r2, [PPU_SPRITE_ATTR(3)]
+
+; bit 8-11: palette (palette 3, colors 48-51 for 2-bit)
+; bit 12-13: depth (2)
+ld r2, #0x63f0
+st r2, [PPU_SPRITE_ATTR(4)]
+
+; bit 8-11: palette (palette 4, colors 64-67 for 2-bit)
+; bit 12-13: depth (3 = top layer)
+ld r2, #0x74f0
+st r2, [PPU_SPRITE_ATTR(5)]
 
 ; now done, run infinite loop
 loop: jmp loop
