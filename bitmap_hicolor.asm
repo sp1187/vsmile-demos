@@ -4,14 +4,12 @@
 
 .unsp
 .low_address 0
-.high_address 0x2ffff
-
-tmp1: .resw 1 ; temporary (global) variable used in loop
+.high_address 0x3ffff
 
 .org 0x10
 
 ; allocate space for tile and attribute maps, which are stored in standard RAM
-; the low part of the bitmap address of each line is stored in the tile map
+; the low part of the bitmap address of each line is stored in the tilemap
 ; the high part of the bitmap address of each line is stored in the attribute map
 ; each word in the attribute map store data for two lines, one in each half
 tilemap:
@@ -35,18 +33,18 @@ st r1, [SYSTEM_CTRL]
 ld r2, #0x55aa
 st r2, [WATCHDOG_CLEAR]
 
-; initialize background scroll values
+; set background scroll values
 st r1, [PPU_BG1_SCROLL_X] ; scroll X offset of bg 1 = 0
 st r1, [PPU_BG1_SCROLL_Y] ; scroll Y offset of bg 1 = 0
 
-; initialize attribute config
+; set attribute config
 ; bit 0-1: color depth (0 = 2-bit)
 ; bit 2: horizontal flip (0 = no flip)
 ; bit 3: vertical flip (0 = no flip)
 ; bit 4-5: X size (0 = 8 pixels)
 ; bit 6-7: Y size (0 = 8 pixels)
 ; bit 8-11: palette (0 = palette 0, colors 0-3 for 2-bit)
-; bit 12: depth (0 = deepest level)
+; bit 12-13: depth (0 = bottom layer)
 st r1, [PPU_BG1_ATTR] ; set attribute of bg 1
 
 ; initialize control config for bg 1
@@ -60,9 +58,9 @@ st r1, [PPU_BG1_ATTR] ; set attribute of bg 1
 ; bit 7: 16-bit color mode (1 = enable)
 ; bit 8: blend (0 = disable)
 ld r2, #0x89
-st r2, [PPU_BG1_CTRL] ; enable bg1 in register mode
+st r2, [PPU_BG1_CTRL] ; enable bg 1 in register mode
 
-st r1, [PPU_BG2_CTRL] ; disable bg2 since bit 3 = 0
+st r1, [PPU_BG2_CTRL] ; disable bg 2 since bit 3 = 0
 
 st r1, [PPU_FADE_CTRL] ; clear fade control
 
@@ -77,7 +75,7 @@ ld r4, #attrmap
 ; configure the tile and attribute maps
 configure_bitmap_loop:
 st r1, [r3++] ; set low part of address for odd line
-st r2, [tmp1] ; save high part of address for later
+ld r5, r2 ; save high part of address for later
 
 ; update line address for next line
 add r1, #320
@@ -85,9 +83,9 @@ adc r2, #0 ; add 1 to high part if low part overflows
 
 st r1, [r3++] ; set low part of address for even line
 
-ld r5, r2 lsl 4
-ld r5, r5 lsl 4
-or r5, [tmp1]
+ld r2, r2 lsl 4
+or r5, r2 lsl 4
+ld r2, r2 lsr 4
 st r5, [r4++] ; set high part of address for a pair of lines
 
 ; update line address for next line
@@ -101,7 +99,7 @@ jb configure_bitmap_loop
 ld r2, #tilemap
 st r2, [PPU_BG1_TILE_ADDR]
 
-; set address of bg 1 attrmap
+; set address of bg 1 attribute map
 ld r2, #attrmap
 st r2, [PPU_BG1_ATTR_ADDR]
 

@@ -10,13 +10,13 @@
 ; allocate space for the tilemap, which is stored in standard RAM
 ; put the tilemap somewhere other than 0 for test purposes
 tilemap:
-.resw (512/8)*(256/8) ;8x8 sized tiles = 64*32 sized tilemap
+.resw (512/8)*(256/8) ; 8x8 sized tiles = 64*32 sized tilemap
 tilemap_end:
 
 ; put the program code in suitable ROM area
 .org 0x8000
 start:
-int off ;turn off interrupts as soon as possible
+int off ; turn off interrupts as soon as possible
 
 ld r1, #0
 
@@ -27,21 +27,21 @@ st r1, [SYSTEM_CTRL]
 ld r2, #0x55aa
 st r2, [WATCHDOG_CLEAR]
 
-; initialize background scroll values
+; set background scroll values for bg 1
 st r1, [PPU_BG1_SCROLL_X] ; scroll X offset of bg 1 = 0
 st r1, [PPU_BG1_SCROLL_Y] ; scroll Y offset of bg 1 = 0
 
-; initialize attribute config
+; set attribute config for bg 1
 ; bit 0-1: color depth (0 = 2-bit)
 ; bit 2: horizontal flip (0 = no flip)
 ; bit 3: vertical flip (0 = no flip)
 ; bit 4-5: X size (0 = 8 pixels)
 ; bit 6-7: Y size (0 = 8 pixels)
 ; bit 8-11: palette (0 = palette 0, colors 0-3 for 2-bit)
-; bit 12: depth (0 = deepest level)
+; bit 12-13: depth (0 = bottom layer)
 st r1, [PPU_BG1_ATTR] ; set attribute of bg 1
 
-; initialize control config for bg 1
+; set control config for bg 1
 ; bit 0: bitmap mode (0 = disable)
 ; bit 1: attribute map mode or register mode (1 = register mode)
 ; bit 2: wallpaper mode (0 = disable)
@@ -52,18 +52,15 @@ st r1, [PPU_BG1_ATTR] ; set attribute of bg 1
 ; bit 7: 16-bit color mode (0 = disable)
 ; bit 8: blend (0 = disable)
 ld r2, #0x0a
-st r2, [PPU_BG1_CTRL] ; enable bg1 in register mode
+st r2, [PPU_BG1_CTRL]
 
-st r1, [PPU_BG2_CTRL] ; disable bg2 since bit 3 = 0
+st r1, [PPU_BG2_CTRL] ; disable bg 2 since bit 3 = 0
 
 st r1, [PPU_FADE_CTRL] ; clear fade control
 
 st r1, [PPU_SPRITE_CTRL] ; disable sprites
 
-; initialize stack pointer to end of RAM space
-ld sp, #0x27ff
-
-; clear tile map
+; clear tilemap
 ld r2, #' ' ; ASCII space
 ld r3, #tilemap
 ld r4, #tilemap_end
@@ -156,7 +153,7 @@ loop: jmp loop
 .org 0xfff5
 .dw 0 ;break
 .dw 0 ;fiq
-.dw start; reset
+.dw start ;reset
 .dw 0 ;irq 0
 .dw 0 ;irq 1
 .dw 0 ;irq 2
